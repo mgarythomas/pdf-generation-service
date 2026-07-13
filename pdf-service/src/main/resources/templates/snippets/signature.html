@@ -1,0 +1,24 @@
+<div th:fragment="signature(signerName, role)">
+    <div style="margin-top: 50px; page-break-inside: avoid;">
+        <table style="width: 100%; border-collapse: collapse; border: 0;">
+            <tr>
+                <td style="width: 45%; border-bottom: 1px solid #718096; height: 50px; vertical-align: bottom; font-family: 'Liberation Sans', sans-serif; font-size: 11px; color: #4a5568; padding-bottom: 5px;">
+                    Digitally Signed By: <strong th:text="${signerName}">Signer Name</strong>
+                </td>
+                <td style="width: 10%;">&nbsp;</td>
+                <td style="width: 45%; border-bottom: 1px solid #718096; height: 50px; vertical-align: bottom; font-family: 'Liberation Sans', sans-serif; font-size: 11px; color: #4a5568; padding-bottom: 5px;">
+                    Date of Attestation: <span th:text="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd HH:mm:ss')}">2026-07-13</span>
+                </td>
+            </tr>
+            <tr>
+                <td style="font-family: 'Liberation Sans', sans-serif; font-size: 10px; color: #718096; padding-top: 5px;" th:text="${role}">
+                    Role
+                </td>
+                <td>&nbsp;</td>
+                <td style="font-family: 'Liberation Sans', sans-serif; font-size: 10px; color: #718096; padding-top: 5px;">
+                    Timestamp (UTC)
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
