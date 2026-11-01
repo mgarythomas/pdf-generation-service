@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Regulatory Compliance Report</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+        body {
+            font-family: 'Liberation Sans', Arial, sans-serif;
+            font-size: 11px;
+            line-height: 1.6;
+            color: #2d3748;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            font-size: 22px;
+            color: #1a365d;
+            margin-top: 0;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        h2 {
+            font-size: 14px;
+            color: #2c5282;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 5px;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            font-weight: bold;
+        }
+        .meta-box {
+            background-color: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .meta-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .meta-table td {
+            padding: 4px 8px;
+            vertical-align: top;
+        }
+        .meta-table td.label {
+            font-weight: bold;
+            color: #4a5568;
+            width: 30%;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 20px;
+        }
+        .data-table th {
+            background-color: #ebf8ff;
+            color: #2b6cb0;
+            font-weight: bold;
+            text-align: left;
+            border: 1px solid #cbd5e0;
+            padding: 8px 10px;
+        }
+        .data-table td {
+            border: 1px solid #e2e8f0;
+            padding: 8px 10px;
+        }
+        .data-table tr:nth-child(even) {
+            background-color: #fafdff;
+        }
+        .alert-box {
+            background-color: #fffaf0;
+            border-left: 4px solid #dd6b20;
+            padding: 12px 15px;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        .alert-title {
+            font-weight: bold;
+            color: #dd6b20;
+            margin-bottom: 5px;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header snippet -->
+    <div th:replace="~{snippets/header :: header(title='Regulatory Compliance Report')}"></div>
+
+    <h1>Regulatory Compliance Report</h1>
+    <p style="font-size: 12px; color: #4a5568; margin-top: 0; margin-bottom: 20px;">
+        Annual Attestation & Assessment Report
+    </p>
+
+    <!-- Metadata Section -->
+    <div class="meta-box">
+        <table class="meta-table">
+            <tr>
+                <td class="label">Organization Name:</td>
+                <td th:text="${organizationName}">ACME Corporation Ltd.</td>
+                <td class="label">Reporting Period:</td>
+                <td th:text="${reportingPeriod}">FY 2026</td>
+            </tr>
+            <tr>
+                <td class="label">Assessor Name:</td>
+                <td th:text="${assessorName}">John Doe</td>
+                <td class="label">Compliance Status:</td>
+                <td style="font-weight: bold;" 
+                    th:styleappend="${overallScore >= 80} ? 'color: #38a169;' : 'color: #e53e3e;'"
+                    th:text="${overallScore >= 80 ? 'APPROVED' : 'FAILED'}">APPROVED</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Overview Section -->
+    <h2>1. Executive Summary</h2>
+    <p th:text="${summaryText}">
+        This report details the regulatory compliance checks performed on the systems and procedures of the organization. 
+        It verifies adherence to safety standards, data management policies, and operational protocols.
+    </p>
+
+    <!-- Conditional/Optional Section: Serious Infractions Box -->
+    <div th:if="${requiresFiling}" class="alert-box">
+        <div class="alert-title">CRITICAL FILING REQUIRED</div>
+        <p th:text="${filingRationale}">
+            A formal filing is required to the central clearing house within 3 business days due to findings identified in this report.
+        </p>
+    </div>
+
+    <!-- Repeated Section: Audits Table -->
+    <h2>2. Detailed Compliance Audits</h2>
+    <p>Below is the itemized list of systems audited, their findings, and current remediation status:</p>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 25%;">System/Scope</th>
+                <th style="width: 15%;">Audit Date</th>
+                <th style="width: 45%;">Findings & Observations</th>
+                <th style="width: 15%;">Result</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="check : ${complianceChecks}">
+                <td style="font-weight: bold;" th:text="${check.systemName}">System Name</td>
+                <td th:text="${check.auditDate}">2026-01-01</td>
+                <td th:text="${check.observations}">No infractions detected.</td>
+                <td style="font-weight: bold;"
+                    th:styleappend="${check.result == 'PASSED'} ? 'color: #38a169;' : 'color: #e53e3e;'"
+                    th:text="${check.result}">PASSED</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Signature and Footer Block -->
+    <div th:replace="~{snippets/signature :: signature(signerName=${assessorName}, role='Lead Auditor')}"></div>
+    <div th:replace="~{snippets/footer :: footer}"></div>
+
+</body>
+</html>

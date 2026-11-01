@@ -1,0 +1,253 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: DS API. AWS CloudFormation - Create a simple EC2 instance  within a specified Subnet.
+Parameters:
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    ConstraintDescription: Can contain only ASCII characters.
+  InstanceType:
+    Description: WebServer EC2 instance type
+    Type: String
+    Default: m3.large
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - m3.medium
+      - m3.large
+      - m3.xlarge
+      - m3.2xlarge
+      - c3.large
+      - c3.xlarge
+      - c3.2xlarge
+      - c3.4xlarge
+      - c3.8xlarge
+      - g2.2xlarge
+      - r3.large
+      - r3.xlarge
+      - r3.2xlarge
+      - r3.4xlarge
+      - r3.8xlarge
+      - i2.xlarge
+      - i2.2xlarge
+      - i2.4xlarge
+      - i2.8xlarge
+      - hi1.4xlarge
+      - hs1.8xlarge
+      - cr1.8xlarge
+      - cc2.8xlarge
+      - cg1.4xlarge
+    ConstraintDescription: Must be a valid EC2 instance type
+  SSHLocation:
+    Description: The IP address range that can be used to SSH to the EC2 instances
+    Type: String
+    MinLength: '9'
+    MaxLength: '18'
+    Default: 0.0.0.0/0
+    AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
+    ConstraintDescription: Must be a valid IP CIDR range of the form x.x.x.x/x
+  VPCID:
+    Description: The SubNet ID of where to deploy this instance of an EC2 Instance
+    Type: 'AWS::EC2::VPC::Id'
+  SubNetID:
+    Description: The SubNet ID of where to deploy this instance of an EC2 Instance
+    Type: 'AWS::EC2::Subnet::Id'
+Mappings:
+  AWSInstanceType2Arch:
+    t2.micro:
+      Arch: HVM64
+    t2.small:
+      Arch: HVM64
+    t2.medium:
+      Arch: HVM64
+    m3.medium:
+      Arch: HVM64
+    m3.large:
+      Arch: HVM64
+    m3.xlarge:
+      Arch: HVM64
+    m3.2xlarge:
+      Arch: HVM64
+    c3.large:
+      Arch: HVM64
+    c3.xlarge:
+      Arch: HVM64
+    c3.2xlarge:
+      Arch: HVM64
+    c3.4xlarge:
+      Arch: HVM64
+    c3.8xlarge:
+      Arch: HVM64
+    r3.large:
+      Arch: HVM64
+    r3.xlarge:
+      Arch: HVM64
+    r3.2xlarge:
+      Arch: HVM64
+    r3.4xlarge:
+      Arch: HVM64
+    r3.8xlarge:
+      Arch: HVM64
+    i2.xlarge:
+      Arch: HVM64
+    i2.2xlarge:
+      Arch: HVM64
+    i2.4xlarge:
+      Arch: HVM64
+    i2.8xlarge:
+      Arch: HVM64
+    hi1.4xlarge:
+      Arch: HVM64
+    hs1.8xlarge:
+      Arch: HVM64
+    cr1.8xlarge:
+      Arch: HVM64
+    cc2.8xlarge:
+      Arch: HVM64
+  AWSRegionArch2AMI:
+    us-east-1:
+      'HVM64': ami-4bf3d731
+    us-west-1:
+      'HVM64': ami-65e0e305
+    eu-west-1:
+      'HVM64': ami-6e28b517
+    ap-southeast-1:
+      'HVM64': ami-b6bb47d4
+    ap-northeast-1:
+      'HVM64': ami-25bd2743
+Resources:
+  EC2TykGWInstance:
+    Type: 'AWS::EC2::Instance'
+    Metadata: 
+      Comment1: 'Configure the initial tyk gateway installation.'
+      AWS::CloudFormation::Init:
+        configSets:
+          default: [Install]
+        Install:
+          packages:
+            yum:
+              epel-release: []
+              pygpgme: []
+              yum-utils: []
+              wget: []
+          files:
+            '/etc/yum.repos.d/tyk_tyk-gateway.repo':
+              content: !Sub |
+                [tyk_tyk-gateway]
+                name=tyk_tyk-gateway
+                baseurl=https://packagecloud.io/tyk/tyk-gateway/el/7/$basearch
+                repo_gpgcheck=1
+                gpgcheck=1
+                enabled=1
+                gpgkey=http://keyserver.tyk.io/tyk.io.rpm.signing.key
+                       https://packagecloud.io/tyk/tyk-gateway/gpgkey
+                sslverify=1
+                sslcacert=/etc/pki/tls/certs/ca-bundle.crt
+                metadata_expire=300
+              mode: '000500'
+              owner: root
+              group: root
+    Properties:
+      ImageId: !FindInMap 
+        - AWSRegionArch2AMI
+        - !Ref 'AWS::Region'
+        - 'HVM64'
+      InstanceType: !Ref InstanceType
+      SecurityGroupIds:
+        - !Ref TykSecurityGroup
+      KeyName: !Ref KeyName
+      SubnetId: !Ref SubNetID
+      Tags:
+        - 
+          Value: TykApiGateway
+          Key: Name
+  EC2TykDashboardInstance:
+    Type: 'AWS::EC2::Instance'
+    Metadata: 
+      Comment1: 'Configure the initial tyk dashboard installation.'
+      AWS::CloudFormation::Init:
+        configSets:
+          default: [Install]
+        Install:
+          packages:
+            yum:
+              epel-release: []
+              pygpgme: []
+              yum-utils: []
+              wget: []
+    Properties:
+      ImageId: !FindInMap 
+        - AWSRegionArch2AMI
+        - !Ref 'AWS::Region'
+        - 'HVM64'
+      InstanceType: !Ref InstanceType
+      SecurityGroupIds:
+        - !Ref TykSecurityGroup
+      KeyName: !Ref KeyName
+      SubnetId: !Ref SubNetID
+      Tags:
+        -
+          Value: TykApiDashboard
+          Key: Name
+  EC2TykPumpInstance:
+    Type: 'AWS::EC2::Instance'
+    Metadata: 
+      Comment1: 'Configure the initial tyk pump installation.'
+      AWS::CloudFormation::Init:
+        configSets:
+          default: [Install]
+        Install:
+          packages:
+            yum:
+              epel-release: []
+              pygpgme: []
+              yum-utils: []
+              wget: []
+    Properties:
+      ImageId: !FindInMap 
+        - AWSRegionArch2AMI
+        - !Ref 'AWS::Region'
+        - 'HVM64'
+      InstanceType: !Ref InstanceType
+      SecurityGroupIds:
+        - !Ref TykSecurityGroup
+      KeyName: !Ref KeyName
+      SubnetId: !Ref SubNetID
+      Tags:
+        - 
+          Value: TykApiPump
+          Key: Name
+  TykSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Enable HTTP access via port 80
+      VpcId: !Ref VPCID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: !Ref SSHLocation
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: !Ref 'SSHLocation'
+        - IpProtocol: tcp
+          FromPort: '8080'
+          ToPort: '8080'
+          CidrIp: !Ref 'SSHLocation'
+        - IpProtocol: tcp
+          FromPort: '443'
+          ToPort: '443'
+          CidrIp: !Ref 'SSHLocation'
+        - IpProtocol: tcp
+          FromPort: '3000'
+          ToPort: '3000'
+          CidrIp: !Ref 'SSHLocation'
+Outputs:
+  WebsiteURL:
+    Description: URL for newly created TYK EC2 Instance
+    Value: !Join 
+      - ''
+      - - 'http://'
+        - !GetAtt 
+          - EC2TykGWInstance
+          - PublicDnsName
